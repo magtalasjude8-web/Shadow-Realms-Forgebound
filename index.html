@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shadow Realms: Forgebound</title>
+<style>
+:root{--bg:#0b1020;--panel:#151d31;--panel2:#1d2942;--line:#465779;--text:#edf2ff;--muted:#aab7d3;--accent:#a78bfa;--good:#5ee0a0;--bad:#ff758f}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1c2850,#090d18 70%);color:var(--text);font:15px/1.4 system-ui,Arial,sans-serif}
+header{padding:16px;text-align:center;background:#0d1325eF;border-bottom:1px solid #6b5ba5;position:sticky;top:0;z-index:4}
+header h1{margin:0;font-size:clamp(20px,4vw,32px);letter-spacing:2px;color:#e4d5ff}header p{margin:4px 0 0;color:var(--muted);font-size:12px}
+button,select,input{font:inherit;color:var(--text);background:#273653;border:1px solid #53658a;border-radius:8px;padding:9px}
+button{cursor:pointer;font-weight:700}button:hover:not(:disabled){background:#4c3978;border-color:#c4b5fd}button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:linear-gradient(100deg,#6d4bd1,#9a54ca);border-color:#d8b4fe}
+.screen{display:none}.screen.active{display:block}.wrap{max-width:1250px;margin:auto;padding:16px}
+.hero{text-align:center;padding:24px 8px 18px}.hero h2{font-size:clamp(25px,5vw,42px);margin:0;color:#e9d5ff}.hero p{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.card,.panel{background:linear-gradient(145deg,#19233a,#121a2c);border:1px solid var(--line);border-radius:13px;padding:14px}
+.card h3{margin:0 0 7px}.card p{color:var(--muted);font-size:13px;min-height:38px}.card button{width:100%;margin-top:6px}
+h2,h3{color:#dfd4ff}h2{font-size:20px}h3{font-size:16px}
+.small{font-size:12px;color:var(--muted)}.muted{color:var(--muted)}
+.toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+.gamegrid{display:grid;grid-template-columns:220px minmax(0,1fr) 250px;gap:12px}
+#world{width:100%;height:auto;display:block;border:2px solid #64749b;border-radius:10px;background:#192b27;image-rendering:pixelated;touch-action:manipulation}
+.stat{font-size:13px;margin:9px 0}.bar{height:8px;border-radius:8px;background:#303951;overflow:hidden;margin-top:4px}.fill{height:100%;background:#5ee0a0}
+.row{display:flex;gap:6px;flex-wrap:wrap}.row>*{flex:1}.stack{display:grid;gap:7px}
+.toolbtn,.blockbtn{text-align:left;font-size:12px;padding:8px}.toolbtn.active,.blockbtn.active{outline:2px solid #d8b4fe;background:#4c3978}
+.inventory{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#notice{padding:10px;background:#111a2b;border:1px solid #394965;border-radius:8px;margin-top:8px;min-height:40px;color:#f5dca0;font-size:13px}
+#eventlog{font-size:12px;line-height:1.7;color:#d4ddf4}.logline{border-bottom:1px solid #293550;padding:3px 0}
+.bottom{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+kbd{background:#0b1020;border:1px solid #526080;border-radius:4px;padding:1px 5px}
+#onlineInfo{border:1px solid #8a6bc0;background:#211a35;border-radius:10px;padding:12px;margin-top:14px}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#151d31;border:1px solid #9b87d6;padding:10px 15px;border-radius:10px;z-index:10;display:none;max-width:90vw;text-align:center}
+@media(max-width:1000px){.gamegrid{grid-template-columns:1fr 1fr}.center{grid-column:1/-1;grid-row:1}.left{grid-column:1;grid-row:2}.right{grid-column:2;grid-row:2}}
+@media(max-width:620px){.gamegrid,.bottom{grid-template-columns:1fr}.center,.left,.right{grid-column:1;grid-row:auto}.wrap{padding:9px}.toolbar{align-items:stretch}.toolbar button{flex:1}}
+</style>
+</head>
+<body>
+<header><h1>SHADOW REALMS: FORGEBOUND</h1><p>Explore • Build • Automate • Battle — a standalone browser game</p></header>
+
+<section id="menu" class="screen active">
+ <div class="wrap">
+  <div class="hero"><h2>Choose Your Realm</h2><p>Build a living world with machines, explore dangerous biomes, or test your skills in battle.</p></div>
+  <div class="cards">
+   <article class="card"><h3>🌱 Solo Survival</h3><p>Gather materials, build a shelter, craft machines, and survive roaming creatures.</p><button class="primary" onclick="newWorld('survival',1)">Create Survival World</button></article>
+   <article class="card"><h3>🧱 Creative Builder</h3><p>Unlimited blocks and free construction. Experiment with gears, conveyors, drills, and power.</p><button class="primary" onclick="newWorld('creative',1)">Enter Creative World</button></article>
+   <article class="card"><h3>⚔ Battle Realms</h3><p>Fight enemies, collect gold and XP, upgrade your warrior, and unlock six biomes.</p><button class="primary" onclick="newWorld('battle',1)">Enter Battle Realms</button></article>
+   <article class="card"><h3>👥 Local Co-op</h3><p>Two players share one world on this device. Player 1 uses WASD; Player 2 uses arrow keys.</p><button onclick="newWorld('coop',2)">Start Local Two-Player</button></article>
+   <article class="card"><h3>📂 Load Saved World</h3><p>Continue a world saved in this browser on this device.</p><button onclick="loadWorld()">Load World</button></article>
+   <article class="card"><h3>📘 Controls & Guide</h3><p>Learn how to build, use machines, move around, and save your creations.</p><button onclick="showGuide()">Open Guide</button></article>
+  </div>
+  <div id="onlineInfo"><strong>🌐 About online multiplayer</strong><p class="small">This single-file version includes local two-player mode. Playing with someone on a different device requires an online server or peer-connection service; no fake online room is created here.</p></div>
+  <div id="menuMsg" class="small" style="text-align:center;margin-top:12px">Your worlds are saved locally in this browser.</div>
+ </div>
+</section>
+
+<section id="game" class="screen">
+ <div class="wrap">
+  <div class="toolbar">
+   <div><strong id="worldName">New World</strong><div class="small" id="worldSubtitle">Creative Builder</div></div>
+   <div class="row" style="max-width:600px">
+    <button onclick="saveWorld()">💾 Save</button><button onclick="togglePause()" id="pauseBtn">Ⅱ Pause</button><button onclick="backToMenu()">☰ Menu</button>
+   </div>
+  </div>
+  <div class="gamegrid">
+   <aside class="panel left">
+    <h3>🧭 World Status</h3>
+    <div class="stat">❤️ HP <b id="hpText">100/100</b><div class="bar"><div id="hpBar" class="fill" style="width:100%;background:#fb7185"></div></div></div>
+    <div class="stat">⭐ Level <b id="levelText">1</b> · XP <b id="xpText">0</b></div>
+    <div class="stat">🪙 Gold <b id="goldText">0</b></div>
+    <div class="stat">🧱 Selected <b id="selectedText">Stone</b></div>
+    <hr style="border-color:#394965">
+    <h3>🛠 Building Tools</h3>
+    <div class="stack" id="tools">
+     <button class="toolbtn active" data-tool="place" onclick="setTool('place')">🧱 Place Block [1]</button>
+     <button class="toolbtn" data-tool="remove" onclick="setTool('remove')">⛏ Remove Block [2]</button>
+     <button class="toolbtn" data-tool="inspect" onclick="setTool('inspect')">🔎 Inspect [3]</button>
+     <button class="toolbtn" data-tool="paint" onclick="setTool('paint')">🎨 Paint / Rotate [4]</button>
+     <button class="toolbtn" data-tool="interact" onclick="setTool('interact')">⚙ Interact [E]</button>
+    </div>
+    <h3 style="margin-top:16px">🧰 Block Palette</h3>
+    <div class="inventory" id="palette"></div>
+    <p class="small">Click a tile on the world to build. In survival, materials are limited; in creative, they are unlimited.</p>
+   </aside>
+
+   <main class="panel center">
+    <div class="toolbar"><h3 style="margin:0" id="biomeName">🌿 Meadow</h3><div class="row" style="max-width:350px"><button onclick="changeBiome(-1)">◀ Biome</button><button onclick="changeBiome(1)">Biome ▶</button></div></div>
+    <canvas id="world" width="800" height="520" aria-label="Game world building grid"></canvas>
+    <div id="notice">Welcome! Select a tool and click a tile to use it.</div>
+    <p class="small">Move: <kbd>WASD</kbd> / arrows · Build tools: <kbd>1</kbd>–<kbd>4</kbd> · Interact: <kbd>E</kbd> · Attack: <kbd>Space</kbd> · Save: <kbd>Ctrl</kbd>+<kbd>S</kbd></p>
+    <div class="row"><button onclick="craftSelected()">🔧 Craft selected</button><button onclick="upgradePlayer()">⬆ Upgrade warrior</button><button onclick="spawnEnemy()">👾 Spawn test enemy</button></div>
+   </main>
+
+   <aside class="panel right">
+    <h3>⚙ Factory & Machines</h3>
+    <div class="small">Place machines on the grid. Select Interact and click a machine to run it.</div>
+    <div id="machineStatus" class="item">No machines placed yet.</div>
+    <div class="item"><strong>⚡ Power Network</strong><p>Generators provide energy to nearby machines. Machines show their current state when inspected.</p><button onclick="runMachines()">Run machine tick</button></div>
+    <h3>🎒 Inventory</h3><div id="inventory" class="small"></div>
+    <h3 style="margin-top:16px">🌍 World Biomes</h3><div id="biomeList"></div>
+    <h3 style="margin-top:16px">📜 Quest</h3><div id="quest" class="small">Build something to begin.</div>
+   </aside>
+  </div>
+  <div class="bottom">
+   <div class="panel"><h3>📖 World Log</h3><div id="eventlog"></div></div>
+   <div class="panel"><h3>👥 Local Co-op</h3><div id="coopInfo" class="small">Solo world.</div><p class="small">P1 moves with WASD. P2 moves with arrow keys. Both players share this world and inventory.</p></div>
+  </div>
+ </div>
+</section>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const canvas=$("world"),ctx=canvas.getContext("2d");
+const TILE=40,COLS=20,ROWS=13;
+const biomes=[
+ {name:"Meadow",icon:"🌿",ground:"#315b3b",bg:"#203d30"},
+ {name:"Amber Desert",icon:"🏜️",ground:"#a87943",bg:"#65472f"},
+ {name:"Frostline",icon:"❄️",ground:"#8bb9d2",bg:"#29435b"},
+ {name:"Mosswood",icon:"🌲",ground:"#244d37",bg:"#132c25"},
+ {name:"Cinder Rift",icon:"🌋",ground:"#78362e",bg:"#391c25"},
+ {name:"Astral Void",icon:"🌌",ground:"#49306b",bg:"#1c1537"}
+];
+const blocks=[
+ {id:"grass",name:"Grass",color:"#4f8b52",type:"terrain",cost:0},
+ {id:"stone",name:"Stone",color:"#858b9b",type:"solid",cost:1},
+ {id:"wood",name:"Timber",color:"#9b673c",type:"solid",cost:1},
+ {id:"glass",name:"Glass",color:"#8bd9e9",type:"glass",cost:2},
+ {id:"metal",name:"Iron Plate",color:"#8799b6",type:"solid",cost:3},
+ {id:"lamp",name:"Glow Lamp",color:"#ffe28a",type:"lamp",cost:3},
+ {id:"gear",name:"Gear Hub",color:"#d8a84f",type:"gear",cost:4},
+ {id:"belt",name:"Flux Belt",color:"#7f8b9f",type:"belt",cost:3},
+ {id:"drill",name:"Bore Drill",color:"#e07b62",type:"drill",cost:6},
+ {id:"generator",name:"Spark Core",color:"#c084fc",type:"generator",cost:8},
+ {id:"chest",name:"Storebox",color:"#b7834e",type:"chest",cost:4},
+ {id:"wall",name:"Reinforced Wall",color:"#5d6685",type:"solid",cost:5}
+];
+const defaultInventory={grass:30,stone:25,wood:20,glass:8,metal:10,lamp:4,gear:5,belt:10,drill:2,generator:2,chest:3,wall:8};
+let world=null,mode="creative",players=[],selectedBlock="stone",tool="place",paused=false,gameOver=false;
+let logLines=[],enemies=[],frame=0,selectedBiome=0,playerLevel=1,xp=0,gold=0,kills=0;
+let inv={},inventoryUnlimited=false,toastTimer=null,keys={},lastAttack=0;
+function notify(s){$("notice").textContent=s}
+function toast(s){const el=$("toast");el.textContent=s;el.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display="none",2100)}
+function log(s){logLines.unshift(s);logLines=logLines.slice(0,6);$("eventlog").innerHTML=logLines.map(x=>'<div class="logline">› '+esc(x)+'</div>').join("")}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function switchScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active")}
+function newWorld(newMode,playerCount){
+ mode=newMode;paused=false;gameOver=false;frame=0;selectedBiome=0;selectedBlock="stone";tool="place";playerLevel=1;xp=0;gold=mode==="creative"?9999:100;kills=0;logLines=[];enemies=[];keys={};
+ inventoryUnlimited=mode==="creative";
+ inv={...defaultInventory};
+ world=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>({id:(y>9?"stone":"grass"),rot:0,active:false,progress:0})));
+ // A little starter platform and clear spawn space.
+ for(let x=7;x<13;x++)for(let y=7;y<11;y++)world[y][x]={id:"grass",rot:0,active:false,progress:0};
+ players=[{x:9.5,y:8.5,color:"#d8b4fe",name:"P1",hp:100,maxHp:100,damage:15},{x:11.5,y:8.5,color:"#67e8f9",name:"P2",hp:100,maxHp:100,damage:12}];
+ if(playerCount===1)players=players.slice(0,1);
+ $("worldName").textContent=({survival:"Solo Survival",creative:"Creative Workshop",battle:"Battle Realms",coop:"Local Co-op"})[mode];
+ $("worldSubtitle").textContent=mode==="coop"?"Two players · shared world":mode==="creative"?"Unlimited construction":mode==="battle"?"Build and battle":"Gather, build, survive";
+ $("pauseBtn").textContent="Ⅱ Pause";
+ switchScreen("game");log("World created: "+$("worldName").textContent);notify("Select a block and click a tile to place it.");renderAll();draw();updateMachineStatus();
+}
+function backToMenu(){paused=false;keys={};switchScreen("menu")}
+function showGuide(){toast("Place: click tiles. Remove: click blocks. Inspect: click a block. Machines: generator powers nearby gear, belt, and drill blocks. Save stores this world in this browser.");$("menuMsg").textContent="Controls: click to build; WASD/arrows move; 1–4 tools; E interact; Space attack; Ctrl+S save."}
+function togglePause(){paused=!paused;$("pauseBtn").textContent=paused?"▶ Resume":"Ⅱ Pause";notify(paused?"World paused.":"World resumed.");draw()}
+function setTool(t){tool=t;document.querySelectorAll(".toolbtn").forEach(b=>b.classList.toggle("active",b.dataset.tool===t));notify("Tool selected: "+t);draw()}
+function selectBlock(id){selectedBlock=id;$("selectedText").textContent=blockDef(id).name;renderPalette();notify("Selected "+blockDef(id).name);draw()}
+function blockDef(id){return blocks.find(b=>b.id===id)||blocks[0]}
+function renderPalette(){$("palette").innerHTML=blocks.map(b=>`<button class="blockbtn ${selectedBlock===b.id?"active":""}" onclick="selectBlock('${b.id}')">${b.name}<br><span class="small">${inventoryUnlimited?"∞":(inv[b.id]||0)+" in bag"}</span></button>`).join("")}
+function renderInventory(){$("inventory").innerHTML=blocks.map(b=>`${b.name}: <b>${inventoryUnlimited?"∞":inv[b.id]||0}</b>`).join("<br>")}
+function renderBiomes(){$("biomeList").innerHTML=biomes.map((b,i)=>`<button class="biome-btn" onclick="setBiome(${i})" ${i===selectedBiome?'style="border-color:#d8b4fe"':""}>${b.icon} ${b.name}</button>`).join("")}
+function renderStats(){
+ const p=players[0];if(!p)return;
+ $("hpText").textContent=Math.max(0,Math.ceil(p.hp))+"/"+p.maxHp;
+ $("hpBar").style.width=Math.max(0,p.hp/p.maxHp*100)+"%";
+ $("levelText").textContent=playerLevel;$("xpText").textContent=xp;$("goldText").textContent=gold;
+ $("selectedText").textContent=blockDef(selectedBlock).name;
+ $("quest").textContent=mode==="creative"?"Creative goal: build a working machine line.":mode==="battle"?"Defeat creatures, earn XP, and build defenses. Kills: "+kills:mode==="coop"?"Work together to build, explore, and protect your workshop.":"Survival goal: build shelter, use machines, and survive. Kills: "+kills;
+ $("coopInfo").textContent=mode==="coop"?"Local co-op active: P1 (WASD, Space), P2 (arrow keys, Enter). Players share inventory and world.":"This world has "+players.length+" player"+(players.length===1?"":"s")+". Choose Local Co-op from the main menu for two players.";
+}
+function renderAll(){renderPalette();renderInventory();renderBiomes();renderStats()}
+function setBiome(i){selectedBiome=(i+biomes.length)%biomes.length;log("Traveled to "+biomes[i].name);$("biomeName").textContent=biomes[i].icon+" "+biomes[i].name;draw();renderBiomes()}
+function tileAtEvent(e){const r=canvas.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)*canvas.width/r.width/TILE),y=Math.floor((e.clientY-r.top)*canvas.height/r.height/TILE);return{x,y}}
+canvas.addEventListener("click",e=>{if(!world||paused)return;const{x,y}=tileAtEvent(e);if(x<0||x>=COLS||y<0||y>=ROWS)return;useTile(x,y)});
+function useTile(x,y){
+ const cell=world[y][x],b=blockDef(cell.id);
+ if(tool==="place"){
+  if(!inventoryUnlimited&&(inv[selectedBlock]||0)<=0){notify("Not enough "+blockDef(selectedBlock).name+".");return}
+  if(players.some(p=>Math.floor(p.x)===x&&Math.floor(p.y)===y)){notify("You cannot build inside a player's tile.");return}
+  if(cell.id===selectedBlock){notify("That block is already there.");return}
+  if(!inventoryUnlimited)inv[selectedBlock]--;
+  if(!inventoryUnlimited&&cell.id!=="grass")inv[cell.id]=(inv[cell.id]||0)+1;
+  world[y][x]={id:selectedBlock,rot:0,active:false,progress:0};
+  if(selectedBlock==="gear")log("Placed a Gear Hub.");
+  if(selectedBlock==="generator")log("Placed a Spark Core. Machines nearby can now receive power.");
+  xp+=1;checkLevel();notify("Placed "+blockDef(selectedBlock).name+".");
+ }else if(tool==="remove"){
+  if(cell.id==="grass"){notify("Natural ground cannot be removed.");return}
+  if(!inventoryUnlimited)inv[cell.id]=(inv[cell.id]||0)+1;
+  world[y][x]={id:"grass",rot:0,active:false,progress:0};notify("Block removed and returned to inventory.");
+ }else if(tool==="inspect"){
+  notify(blockDef(cell.id).name+" · "+b.type+(cell.active?" · powered/active":" · idle")+(cell.rot?" · rotated":""));
+ }else if(tool==="paint"){
+  cell.rot=(cell.rot+1)%4;notify(blockDef(cell.id).name+" rotated to "+cell.rot*90+"°.");
+ }else if(tool==="interact"){
+  interactTile(x,y,cell);
+ }
+ renderAll();draw();updateMachineStatus();
+}
+function interactTile(x,y,c){
+ const b=blockDef(c.id);
+ if(b.type==="generator"){c.active=!c.active;notify("Spark Core "+(c.active?"activated":"deactivated")+".");log("Generator "+(c.active?"on":"off"));return}
+ if(b.type==="chest"){c.active=!c.active;notify(c.active?"Storebox opened. Materials are shared with inventory.":"Storebox closed.");return}
+ if(b.type==="drill"){c.active=!c.active;notify(c.active?"Bore Drill engaged. It needs power nearby.":"Bore Drill stopped.");return}
+ if(b.type==="gear"||b.type==="belt"){c.active=!c.active;notify(b.name+" "+(c.active?"engaged":"stopped")+".");return}
+ notify("Nothing to interact with here.");
+}
+function isMachine(id){return ["gear","belt","drill","generator"].includes(id)}
+function powered(x,y){
+ for(let yy=Math.max(0,y-3);yy<=Math.min(ROWS-1,y+3);yy++)for(let xx=Math.max(0,x-3);xx<=Math.min(COLS-1,x+3);xx++){
+  const c=world[yy][xx];if(c.id==="generator"&&c.active&&Math.abs(xx-x)+Math.abs(yy-y)<=4)return true;
+ }return false
+}
+function runMachines(){
+ if(!world)return;
+ let produced=0,drilled=0,belts=0;
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+  const c=world[y][x];
+  if(c.id==="generator"&&c.active)produced++;
+  if(c.id==="drill"&&c.active&&powered(x,y)){
+   c.progress=(c.progress||0)+1;
+   if(c.progress>=3){c.progress=0;inv.stone=(inv.stone||0)+1;drilled++}
+  }
+  if(c.id==="belt"&&c.active&&powered(x,y))belts++;
+ }
+ renderAll();draw();updateMachineStatus();
+ notify("Machine tick complete: "+produced+" active generator(s), "+drilled+" stone mined, "+belts+" powered conveyor(s).");
+}
+function updateMachineStatus(){
+ if(!world){$("machineStatus").textContent="No machines placed yet.";return}
+ let generators=0,active=0,drills=0,belts=0,gears=0;
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+  const c=world[y][x];
+  if(c.id==="generator"&&c.active)generators++;
+  if(c.id==="drill"){drills++;if(c.active&&powered(x,y))active++}
+  if(c.id==="belt"){belts++;if(c.active&&powered(x,y))active++}
+  if(c.id==="gear")gears++;
+ }
+ $("machineStatus").innerHTML=`Active Spark Cores: <b>${generators}</b><br>Gear Hubs: <b>${gears}</b><br>Bore Drills: <b>${drills}</b><br>Flux Belts: <b>${belts}</b><br>Powered nearby machines: <b>${active}</b>`;
+}
+function craftSelected(){
+ const id=selectedBlock,b=blockDef(id);
+ if(inventoryUnlimited){toast("Creative mode: blocks are unlimited.");return}
+ if(gold<b.cost*5){notify("Crafting "+b.name+" costs "+b.cost*5+" gold.");return}
+ gold-=b.cost*5;inv[id]=(inv[id]||0)+3;renderAll();notify("Crafted 3 "+b.name+" blocks.");
+}
+function upgradePlayer(){
+ if(gold<50){notify("Warrior upgrade costs 50 gold.");return}
+ gold-=50;players[0].maxHp+=10;players[0].hp=Math.min(players[0].maxHp,players[0].hp+10);players[0].damage+=2;
+ renderAll();notify("Warrior upgraded: +10 max HP and +2 damage.");
+}
+function checkLevel(){while(xp>=playerLevel*20){xp-=playerLevel*20;playerLevel++;players.forEach(p=>{p.maxHp+=10;p.hp=p.maxHp});gold+=20;log("Level up! Level "+playerLevel+". +20 gold.");}}
+function spawnEnemy(){
+ if(!world)return;
+ const x=1+Math.floor(Math.random()*(COLS-2)),y=1+Math.floor(Math.random()*(ROWS-2));
+ enemies.push({x:x+.5,y:y+.5,hp:30+playerLevel*8,maxHp:30+playerLevel*8,damage:5+playerLevel*2});
+ notify("A roaming creature has appeared.");
+}
+function attack(pIndex=0){
+ const p=players[pIndex];if(!p||paused||!world)return;
+ const now=Date.now();if(now-lastAttack<300)return;lastAttack=now;
+ const e=enemies.find(e=>Math.hypot(e.x-p.x,e.y-p.y)<2.5);
+ if(!e){notify("No creature nearby.");return}
+ e.hp-=p.damage;
+ if(e.hp<=0){enemies=enemies.filter(x=>x!==e);kills++;gold+=12;xp+=8;checkLevel();log("Creature defeated. +12 gold.");}
+ renderAll();draw();
+}
+function movePlayer(p,dx,dy){
+ if(!p||paused||!world)return;
+ const nx=Math.max(.5,Math.min(COLS-.5,p.x+dx)),ny=Math.max(.5,Math.min(ROWS-.5,p.y+dy));
+ p.x=nx;p.y=ny;
+}
+function draw(){
+ if(!world)return;
+ const b=biomes[selectedBiome];ctx.fillStyle=b.bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+  const c=world[y][x],def=blockDef(c.id),px=x*TILE,py=y*TILE;
+  ctx.fillStyle=c.id==="grass"?b.ground:def.color;ctx.fillRect(px+1,py+1,TILE-2,TILE-2);
+  ctx.strokeStyle="#0b102033";ctx.strokeRect(px,py,TILE,TILE);
+  if(c.id==="glass"){ctx.strokeStyle="#d9fbff";ctx.strokeRect(px+7,py+7,26,26);ctx.beginPath();ctx.moveTo(px+8,py+8);ctx.lineTo(px+32,py+32);ctx.stroke()}
+  if(c.id==="wood"){ctx.strokeStyle="#5d3d28";ctx.beginPath();ctx.moveTo(px+5,py+8);ctx.lineTo(px+35,py+8);ctx.moveTo(px+5,py+25);ctx.lineTo(px+35,py+25);ctx.stroke()}
+  if(c.id==="metal"||c.id==="wall"){ctx.fillStyle="#dbeafe";ctx.fillRect(px+6,py+6,4,4);ctx.fillRect(px+30,py+30,4,4)}
+  if(c.id==="lamp"){ctx.fillStyle="#fff6bd";ctx.beginPath();ctx.arc(px+20,py+20,10,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff4a3";ctx.fillRect(px+17,py+8,6,24)}
+  if(c.id==="gear"){ctx.strokeStyle="#4a3422";ctx.lineWidth=3;ctx.beginPath();ctx.arc(px+20,py+20,11,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(px+10,py+20);ctx.lineTo(px+30,py+20);ctx.moveTo(px+20,py+10);ctx.lineTo(px+20,py+30);ctx.stroke();ctx.lineWidth=1}
+  if(c.id==="belt"){ctx.fillStyle="#30394e";ctx.fillRect(px+4,py+14,32,12);ctx.fillStyle="#c6d1e6";for(let k=0;k<3;k++)ctx.fillRect(px+8+k*10,py+16,5,8)}
+  if(c.id==="drill"){ctx.fillStyle="#4a2c2c";ctx.fillRect(px+9,py+7,22,25);ctx.fillStyle="#ffd4bf";ctx.beginPath();ctx.moveTo(px+14,py+29);ctx.lineTo(px+20,py+38);ctx.lineTo(px+26,py+29);ctx.fill();if(c.active&&powered(x,y)){ctx.fillStyle="#5ee0a0";ctx.fillRect(px+3,py+3,6,6)}}
+  if(c.id==="generator"){ctx.fillStyle="#f5d0fe";ctx.beginPath();ctx.moveTo(px+22,py+5);ctx.lineTo(px+12,py+22);ctx.lineTo(px+20,py+22);ctx.lineTo(px+15,py+35);ctx.lineTo(px+29,py+17);ctx.lineTo(px+21,py+17);ctx.fill();if(c.active){ctx.strokeStyle="#e9d5ff";ctx.strokeRect(px+3,py+3,34,34)}}
+  if(c.id==="chest"){ctx.fillStyle="#5b3827";ctx.fillRect(px+6,py+11,28,23);ctx.fillStyle="#e2b76e";ctx.fillRect(px+6,py+17,28,4);ctx.fillRect(px+18,py+17,4,8)}
+  if(c.rot){ctx.fillStyle="#ffffff99";ctx.font="10px Arial";ctx.fillText("↻"+c.rot,px+3,py+10)}
+ }
+ enemies.forEach(e=>{ctx.fillStyle="#fb7185";ctx.beginPath();ctx.arc(e.x*TILE,e.y*TILE,10,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(e.x*TILE-7,e.y*TILE-14,14,3);ctx.fillStyle="#ef4444";ctx.fillRect(e.x*TILE-7,e.y*TILE-14,14*Math.max(0,e.hp/e.maxHp),3)});
+ players.forEach((p,i)=>{ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x*TILE,p.y*TILE,11,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#fff";ctx.stroke();ctx.fillStyle="#fff";ctx.font="10px Arial";ctx.textAlign="center";ctx.fillText(p.name,p.x*TILE,p.y*TILE-15)});
+ if(paused){ctx.fillStyle="#050816bb";ctx.fillRect(0,0,800,520);ctx.fillStyle="#fff";ctx.font="bold 30px Arial";ctx.textAlign="center";ctx.fillText("PAUSED",400,260)}
+}
+function saveWorld(){
+ if(!world)return;
+ try{
+  const data={version:1,mode,world,players,selectedBlock,tool,inv,inventoryUnlimited,selectedBiome,playerLevel,xp,gold,kills,enemies,upgrades:{},logLines};
+  localStorage.setItem("forgeboundSave",JSON.stringify(data));toast("World saved in this browser.");
+ }catch(e){toast("Could not save. Browser storage may be full.");}
+}
+function loadWorld(){
+ try{
+  const raw=localStorage.getItem("forgeboundSave");
+  if(!raw){$("menuMsg").textContent="No saved world found in this browser.";return}
+  const d=JSON.parse(raw);
+  if(!d.world||!Array.isArray(d.world)||!d.players||!d.inv){$("menuMsg").textContent="Save data is invalid.";return}
+  mode=d.mode||"creative";world=d.world;players=d.players;selectedBlock=blockDef(d.selectedBlock).id;tool=d.tool||"place";inv=d.inv;inventoryUnlimited=!!d.inventoryUnlimited;selectedBiome=Math.max(0,Math.min(biomes.length-1,d.selectedBiome||0));playerLevel=d.playerLevel||1;xp=d.xp||0;gold=d.gold||0;kills=d.kills||0;enemies=Array.isArray(d.enemies)?d.enemies:[];logLines=Array.isArray(d.logLines)?d.logLines:[];
+  paused=false;gameOver=false;gameStarted=true;keys={};
+  $("worldName").textContent=mode==="coop"?"Local Co-op":mode==="creative"?"Creative Workshop":mode==="battle"?"Battle Realms":"Solo Survival";
+  $("worldSubtitle").textContent="Loaded saved world";switchScreen("game");renderAll();draw();updateMachineStatus();toast("Saved world loaded.");
+ }catch(e){$("menuMsg").textContent="Could not load the saved world."}
+}
+function tick(){
+ if(world&&$("game").classList.contains("active")&&!paused){
+  frame++;
+  players.forEach((p,i)=>{
+   let dx=0,dy=0;
+   if(i===0){dx=(keys.d?1:0)-(keys.a?1:0);dy=(keys.s?1:0)-(keys.w?1:0)}
+   else{dx=(keys.arrowright?1:0)-(keys.arrowleft?1:0);dy=(keys.arrowdown?1:0)-(keys.arrowup?1:0)}
+   if(dx||dy)movePlayer(p,dx*.045,dy*.045);
+  });
+  if(mode!=="creative"&&frame%90===0&&enemies.length<6)spawnEnemy();
+  if(mode!=="creative")enemies.forEach(e=>{players.forEach(p=>{if(Math.hypot(e.x-p.x,e.y-p.y)<.6){p.hp=Math.max(0,p.hp-e.damage*.02);if(p.hp===0){p.hp=p.maxHp;gold=Math.max(0,gold-10);notify(p.name+" was knocked out and lost 10 gold.")}}})});
+  if(frame%12===0)renderStats();
+  draw();
+ }
+ requestAnimationFrame(tick);
+}
+document.addEventListener("keydown",e=>{
+ const k=e.key.toLowerCase();
+ if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();
+ keys[k]=true;
+ if(e.repeat)return;
+ if(k==="1")setTool("place");if(k==="2")setTool("remove");if(k==="3")setTool("inspect");if(k==="4")setTool("paint");
+ if(k==="e")setTool("interact");
+ if(k===" "){attack(0);if(mode==="coop")attack(1)}
+ if(k==="enter"&&mode==="coop")attack(1);
+ if((e.ctrlKey||e.metaKey)&&k==="s"){e.preventDefault();saveWorld()}
+});
+document.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
+window.addEventListener("blur",()=>{keys={}});
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
